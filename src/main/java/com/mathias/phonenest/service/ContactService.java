@@ -1,5 +1,6 @@
 package com.mathias.phonenest.service;
 
+import com.mathias.phonenest.domain.entities.Contact;
 import com.mathias.phonenest.domain.enums.Group;
 import com.mathias.phonenest.payload.request.ContactRequest;
 import com.mathias.phonenest.payload.request.UpdateContactRequest;
@@ -23,5 +24,9 @@ public interface ContactService {
  ContactReportDto searchContacts(String query);
 
  List<ContactReportDto> getContactByGroup(Group groupName);
+
+ void saveAllContacts(List<Contact> contacts);
+
+ List<Contact> getAllContactsEntity();
 
 }

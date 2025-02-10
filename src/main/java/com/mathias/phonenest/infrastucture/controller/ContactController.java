@@ -1,17 +1,25 @@
 package com.mathias.phonenest.infrastucture.controller;
 
 
+import com.mathias.phonenest.domain.entities.Contact;
 import com.mathias.phonenest.domain.enums.Group;
 import com.mathias.phonenest.payload.request.ContactRequest;
 import com.mathias.phonenest.payload.request.UpdateContactRequest;
 import com.mathias.phonenest.payload.response.ContactReportDto;
 import com.mathias.phonenest.payload.response.ContactResponse;
 import com.mathias.phonenest.service.ContactService;
+import com.mathias.phonenest.util.CsvHelper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -135,6 +143,61 @@ public class ContactController {
         String result = contactService.bulkDeleteContacts(ids);
         // Return the result message with HTTP status 200 (OK).
         return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Import contacts via CSV file.
+     *
+     * Endpoint: POST /api/contacts/import
+     *
+     * Expects a multipart file with CSV data.
+     * Sample CSV template header:
+     * firstName,lastName,email,phoneNumber,contactImage,address,groupName
+     *
+     * @param file the uploaded CSV file.
+     * @return a ResponseEntity with a success or error message.
+     */
+    @PostMapping("/import")
+    public ResponseEntity<String> importContacts(@RequestParam("file") MultipartFile file) {
+        // Validate that the uploaded file is a CSV.
+        if (!CsvHelper.hasCSVFormat(file)) {
+            return ResponseEntity.badRequest().body("Please upload a CSV file.");
+        }
+        try {
+            // Parse the CSV file to a list of Contact objects.
+            List<Contact> contacts = CsvHelper.csvToContacts(file.getInputStream());
+            // Save all the contacts using the service layer.
+            contactService.saveAllContacts(contacts);
+            return ResponseEntity.ok("Uploaded and imported CSV file successfully: " + file.getOriginalFilename());
+        } catch (IOException e) {
+            return ResponseEntity.status(417).body("Failed to import CSV file: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Export all contacts as a CSV file.
+     *
+     * Endpoint: GET /api/contacts/export
+     *
+     * This endpoint retrieves all contacts from the database and converts them to CSV format.
+     *
+     * @return a ResponseEntity containing the CSV file as an attachment.
+     */
+    @GetMapping("/export")
+    public ResponseEntity<InputStreamResource> exportContacts() {
+        String filename = "contacts.csv";
+        // Retrieve all contacts from the service layer.
+        List<Contact> contacts = contactService.getAllContactsEntity();
+        // Convert the contacts list to CSV format.
+        ByteArrayInputStream in = CsvHelper.contactsToCSV(contacts);
+        // Prepare the HTTP headers for file download.
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=" + filename);
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType("application/csv"))
+                .body(new InputStreamResource(in));
     }
 
 }

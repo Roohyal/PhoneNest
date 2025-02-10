@@ -175,4 +175,16 @@ public class ContactServiceImpl implements ContactService {
                         .build())
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public void saveAllContacts(List<Contact> contacts) {
+        // Save all contacts using Spring Data JPA's saveAll method.
+        contactRepository.saveAll(contacts);
+    }
+
+    @Override
+    public List<Contact> getAllContactsEntity() {
+        // Retrieve all contacts from the repository.
+        return contactRepository.findAll();
+    }
 }
