@@ -21,7 +21,7 @@ public interface ContactService {
 
  List<ContactReportDto> getAllContacts();
 
- ContactReportDto searchContacts(String query);
+ List<ContactReportDto> searchContacts(String query);
 
  List<ContactReportDto> getContactByGroup(Group groupName);
 

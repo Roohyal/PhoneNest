@@ -3,6 +3,7 @@ package com.mathias.phonenest.service.Impl;
 import com.mathias.phonenest.domain.entities.Contact;
 import com.mathias.phonenest.domain.enums.Group;
 import com.mathias.phonenest.exceptions.AlreadyExistException;
+import com.mathias.phonenest.exceptions.InvalidFormatException;
 import com.mathias.phonenest.exceptions.NotFoundException;
 import com.mathias.phonenest.payload.request.ContactRequest;
 import com.mathias.phonenest.payload.request.UpdateContactRequest;
@@ -37,6 +38,16 @@ public class ContactServiceImpl implements ContactService {
         // If yes, throw an AlreadyExistException.
         if (contactRepository.findByPhoneNumber(contactRequest.getPhoneNumber()).isPresent()) {
             throw new AlreadyExistException("A contact with the phone number " + contactRequest.getPhoneNumber() + " already exists.");
+        }
+        // Define a regex pattern for the phone number:
+        // ^        -> start of the string
+        // \\d{11}  -> exactly 11 digits (\\d represents a digit)
+        // $        -> end of the string
+        String phoneRegex = "^\\d{11}$";
+
+        // Validate that the phone number matches the regex pattern.
+        if (!contactRequest.getPhoneNumber().matches(phoneRegex)) {
+            throw new InvalidFormatException("Phone number must be exactly 11 digits long.");
         }
 
         // Build a new Contact entity from the incoming request
@@ -128,31 +139,34 @@ public class ContactServiceImpl implements ContactService {
     }
 
     @Override
-    public ContactReportDto searchContacts(String query) {
-        // Query the repository for the first contact that contains the query (ignoring case)
-        // in any of the following fields: firstName, lastName, email, or phoneNumber.
-        Optional<Contact> optionalContact = contactRepository
-                .findFirstByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrPhoneNumberContainingIgnoreCase(
+    public List<ContactReportDto> searchContacts(String query) {
+        // Query the repository for all contacts where any of the following fields
+        // contains the query string (ignoring case): firstName, lastName, email, or phoneNumber.
+        List<Contact> contacts = contactRepository
+                .findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrPhoneNumberContainingIgnoreCase(
                         query, query, query, query
                 );
 
-        // If a matching contact is found, map the Contact entity to a ContactReportDto and return it.
-        if (optionalContact.isPresent()) {
-            Contact contact = optionalContact.get();
-            return ContactReportDto.builder()
-                    .firstName(contact.getFirstName())
-                    .lastName(contact.getLastName())
-                    .phoneNumber(contact.getPhoneNumber())
-                    .email(contact.getEmail())
-                    .contactImage(contact.getContactImage())
-                    .address(contact.getAddress())
-                    .groupName(contact.getGroupName())
-                    .build();
+        // If no matching contacts are found, throw a NotFoundException.
+        if (contacts.isEmpty()) {
+            throw new NotFoundException("No contact found matching query: " + query);
         }
 
-        // If no matching contact is found, throw a custom exception indicating that.
-        throw new NotFoundException("No contact found matching query: " + query);
+        // Map each Contact entity to a ContactReportDto using the builder pattern
+        // and collect the results into a list.
+        return contacts.stream()
+                .map(contact -> ContactReportDto.builder()
+                        .firstName(contact.getFirstName())
+                        .lastName(contact.getLastName())
+                        .phoneNumber(contact.getPhoneNumber())
+                        .email(contact.getEmail())
+                        .contactImage(contact.getContactImage())
+                        .address(contact.getAddress())
+                        .groupName(contact.getGroupName())
+                        .build())
+                .collect(Collectors.toList());
     }
+
 
     @Override
     public List<ContactReportDto> getContactByGroup(Group group) {

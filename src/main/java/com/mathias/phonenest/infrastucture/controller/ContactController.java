@@ -93,9 +93,9 @@ public class ContactController {
      * @return a ResponseEntity containing a ContactReportDto for the matched contact and an HTTP OK (200) status.
      */
     @GetMapping("/search")
-    public ResponseEntity<ContactReportDto> searchContact(@RequestParam String query) {
+    public ResponseEntity<?> searchContact(@RequestParam String query) {
         // Search for the contact using the provided query string.
-        ContactReportDto contact = contactService.searchContacts(query);
+        List<ContactReportDto> contact = contactService.searchContacts(query);
         // Return the found contact as a DTO with HTTP status 200 (OK).
         return ResponseEntity.ok(contact);
     }

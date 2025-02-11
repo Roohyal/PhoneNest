@@ -16,7 +16,7 @@ public interface ContactRepository extends JpaRepository<Contact, Long> {
 
     List<Contact> findByGroupName(Group groupName, Sort sort);
 
-    Optional<Contact> findFirstByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrPhoneNumberContainingIgnoreCase(
+    List<Contact> findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrPhoneNumberContainingIgnoreCase(
             String firstName, String lastName, String email, String phoneNumber);
 
 
