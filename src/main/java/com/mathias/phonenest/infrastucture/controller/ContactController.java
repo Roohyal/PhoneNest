@@ -9,6 +9,9 @@ import com.mathias.phonenest.payload.response.ContactReportDto;
 import com.mathias.phonenest.payload.response.ContactResponse;
 import com.mathias.phonenest.service.ContactService;
 import com.mathias.phonenest.util.CsvHelper;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -147,9 +150,7 @@ public class ContactController {
 
     /**
      * Import contacts via CSV file.
-     *
      * Endpoint: POST /api/contacts/import
-     *
      * Expects a multipart file with CSV data.
      * Sample CSV template header:
      * firstName,lastName,email,phoneNumber,contactImage,address,groupName
@@ -157,8 +158,12 @@ public class ContactController {
      * @param file the uploaded CSV file.
      * @return a ResponseEntity with a success or error message.
      */
-    @PostMapping("/import")
-    public ResponseEntity<String> importContacts(@RequestParam("file") MultipartFile file) {
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> importContacts(
+            @Parameter(description = "CSV file to upload", required = true,
+                    content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                            schema = @Schema(type = "string", format = "binary")))
+            @RequestPart("file") MultipartFile file) {
         // Validate that the uploaded file is a CSV.
         if (!CsvHelper.hasCSVFormat(file)) {
             return ResponseEntity.badRequest().body("Please upload a CSV file.");
@@ -176,11 +181,8 @@ public class ContactController {
 
     /**
      * Export all contacts as a CSV file.
-     *
      * Endpoint: GET /api/contacts/export
-     *
      * This endpoint retrieves all contacts from the database and converts them to CSV format.
-     *
      * @return a ResponseEntity containing the CSV file as an attachment.
      */
     @GetMapping("/export")
