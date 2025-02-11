@@ -32,6 +32,33 @@ PhoneNest is a robust contact management system built using Spring Boot on the b
     - Apache Commons CSV for CSV parsing and generation
     - springdoc-openapi & Swagger UI for API documentation and testing
 
+## Domain Model
+
+### Contact Entity
+
+The `Contact` entity represents an individual contact in the PhoneNest application. It contains the following fields:
+
+| Field Name    | Data Type   | Description                                                  |
+|---------------|-------------|--------------------------------------------------------------|
+| `id`          | Long        | Primary key; unique identifier for each contact.             |
+| `firstName`   | String      | The contact's first name.                                    |
+| `lastName`    | String      | The contact's last name.                                     |
+| `email`       | String      | The contact's email address. Must be unique.                 |
+| `phoneNumber` | String      | The contact's phone number. Must be exactly 11 digits long.    |
+| `contactImage`| String      | URL or file path for the contact's image.                    |
+| `address`     | String      | The physical address of the contact.                         |
+| `groupName`   | Group Enum  | The group to which the contact belongs (e.g., FAMILY, FRIENDS, WORK). |
+
+*Note:* The `Group` is an enum that could be defined as follows:
+
+
+_public enum Group {
+    `FAMILY,
+    FRIENDS,
+    WORK,`
+    // Add more groups as needed
+}_
+
 
 ## Getting Started
 
